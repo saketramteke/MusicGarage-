@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GrooveRoom — Simple Music Website</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa5b1;--accent:#7c3aed;--glass:rgba(255,255,255,0.04)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#e6eef6;background:linear-gradient(180deg,#071023 0%, #07182a 100%);-webkit-font-smoothing:antialiased}
+    header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    h1{margin:0;font-size:18px}
+    nav{display:flex;gap:12px}
+    nav button{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer}
+    nav button:hover{color:white;border-color:var(--glass)}
+
+    .container{max-width:1100px;margin:20px auto;padding:18px}
+    .grid{display:grid;grid-template-columns:320px 1fr;gap:18px}
+
+    .left{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:12px}
+    .cover{width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#111827,#0b1220);display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700}
+    .playlist{margin-top:14px}
+    .search{width:100%;padding:10px;border-radius:10px;border:none;background:#071427;color:#dfe9f6}
+
+    .track{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;margin-top:8px;cursor:pointer}
+    .track:hover{background:rgba(255,255,255,0.02)}
+    .track .meta{flex:1}
+    .track .title{font-size:14px;margin:0}
+    .track .artist{font-size:12px;color:var(--muted);margin-top:4px}
+
+    .main{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:12px;display:flex;flex-direction:column}
+    .now{display:flex;gap:12px;align-items:center}
+    .now .thumb{width:84px;height:84px;border-radius:8px;background:var(--glass);display:flex;align-items:center;justify-content:center}
+    .now .info{flex:1}
+    .controls{display:flex;align-items:center;gap:8px;margin-top:16px}
+
+    .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px;border-radius:10px;cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+
+    .progress{width:100%;height:8px;background:rgba(255,255,255,0.03);border-radius:99px;overflow:hidden;margin-top:14px}
+    .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#06b6d4)}
+    .bottom{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+
+    footer{padding:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    @media (max-width:880px){
+      .grid{grid-template-columns:1fr;}
+      .left{order:2}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">G</div>
+      <div>
+        <h1>GrooveRoom</h1>
+        <div style="font-size:12px;color:var(--muted)">Your mini music playground</div>
+      </div>
+    </div>
+    <nav>
+      <button id="shuffleBtn">Shuffle</button>
+      <button id="repeatBtn">Repeat</button>
+      <button id="themeBtn">Light</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="grid">
+      <section class="left">
+        <div class="cover" id="cover">Album Art</div>
+
+        <input class="search" id="search" placeholder="Search tracks, artists..." />
+
+        <div class="playlist" id="playlist"></div>
+      </section>
+
+      <section class="main">
+        <div class="now">
+          <div class="thumb" id="thumb">♪</div>
+          <div class="info">
+            <div id="nowTitle" style="font-weight:700">Not playing</div>
+            <div id="nowArtist" style="color:var(--muted)">—</div>
+            <div class="progress" id="progress" title="Click to seek"><i></i></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px">
+              <span id="timeCurrent">0:00</span>
+              <span id="timeTotal">0:00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="prev">⏮️</button>
+          <button class="btn" id="play">▶️</button>
+          <button class="btn" id="next">⏭️</button>
+          <div style="flex:1"></div>
+          <label style="font-size:13px;color:var(--muted);">Volume</label>
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" />
+        </div>
+
+        <div class="bottom">
+          <div style="font-size:13px;color:var(--muted)">Playlists: <strong id="playlistCount">0</strong></div>
+          <div style="font-size:13px;color:var(--muted)">Built with ❤️ — Customize freely</div>
+        </div>
+
+        <!-- Hidden audio element used by JS -->
+        <audio id="audio" preload="metadata"></audio>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    Tip: Click a track on the left to play. Replace sample URLs with your own MP3 files.
+  </footer>
+
+  <script>
+    /* Simple playlist data — replace with your tracks */
+    const tracks = [
+      { id:1, title: 'SoundHelix Song 1', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', cover: '', length:0 },
+      { id:2, title: 'SoundHelix Song 2', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', cover: '', length:0 },
+      { id:3, title: 'SoundHelix Song 3', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', cover: '', length:0 }
+    ];
+
+    // DOM refs
+    const playlistEl = document.getElementById('playlist');
+    const audio = document.getElementById('audio');
+    const nowTitle = document.getElementById('nowTitle');
+    const nowArtist = document.getElementById('nowArtist');
+    const playBtn = document.getElementById('play');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const progressBar = document.getElementById('progress');
+    const progressFill = progressBar.querySelector('i');
+    const timeCurrent = document.getElementById('timeCurrent');
+    const timeTotal = document.getElementById('timeTotal');
+    const volume = document.getElementById('volume');
+    const search = document.getElementById('search');
+    const cover = document.getElementById('cover');
+    const thumb = document.getElementById('thumb');
+    const playlistCount = document.getElementById('playlistCount');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const themeBtn = document.getElementById('themeBtn');
+
+    let currentIndex = 0;
+    let isPlaying = false;
+    let isShuffle = false;
+    let isRepeat = false;
+    let filteredTracks = [...tracks];
+
+    function renderPlaylist(list){
+      playlistEl.innerHTML = '';
+      list.forEach((t,i)=>{
+        const el = document.createElement('div');
+        el.className = 'track';
+        el.dataset.index = i;
+        el.innerHTML = `
+          <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#111827,#0b1220);display:flex;align-items:center;justify-content:center">♫</div>
+          <div class="meta">
+            <p class="title">${t.title}</p>
+            <div class="artist">${t.artist}</div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">▶</div>
+        `;
+        el.addEventListener('click', ()=>{
+          currentIndex = i;
+          loadTrack(filteredTracks[currentIndex]);
+          playAudio();
+        });
+        playlistEl.appendChild(el);
+      });
+      playlistCount.textContent = list.length;
+    }
+
+    function loadTrack(track){
+      if(!track) return;
+      audio.src = track.src;
+      nowTitle.textContent = track.title;
+      nowArtist.textContent = track.artist;
+      // set cover/thumb if present
+      if(track.cover){cover.style.backgroundImage = `url(${track.cover})`; cover.textContent = ''}
+      else {cover.style.backgroundImage='none'; cover.textContent='Album Art';}
+      thumb.textContent = '♪';
+      updateActiveTrack();
+    }
+
+    function updateActiveTrack(){
+      const nodes = playlistEl.querySelectorAll('.track');
+      nodes.forEach(n=>n.style.opacity = '0.9');
+      const node = nodes[currentIndex];
+      if(node) node.style.opacity = '1';
+    }
+
+    function playAudio(){
+      audio.play();
+    }
+    function pauseAudio(){
+      audio.pause();
+    }
+
+    playBtn.addEventListener('click', ()=>{
+      if(audio.src === '') loadTrack(filteredTracks[currentIndex]);
+      if(audio.paused){playAudio()}else{pauseAudio()}
+    });
+
+    prevBtn.addEventListener('click', ()=>{
+      if(isShuffle){currentIndex = Math.floor(Math.random()*filteredTracks.length)} else { currentIndex = (currentIndex -1 + filteredTracks.length) % filteredTracks.length }
+      loadTrack(filteredTracks[currentIndex]);
+      playAudio();
+    });
+
+    nextBtn.addEventListener('click', ()=>{
+      if(isShuffle){currentIndex = Math.floor(Math.random()*filteredTracks.length)} else { currentIndex = (currentIndex +1) % filteredTracks.length }
+      loadTrack(filteredTracks[currentIndex]);
+      playAudio();
+    });
+
+    audio.addEventListener('play', ()=>{ isPlaying = true; playBtn.textContent = '⏸️' });
+    audio.addEventListener('pause', ()=>{ isPlaying = false; playBtn.textContent = '▶️' });
+
+    audio.addEventListener('timeupdate', ()=>{
+      if(audio.duration){
+        const pct = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = pct + '%';
+        timeCurrent.textContent = formatTime(audio.currentTime);
+        timeTotal.textContent = formatTime(audio.duration);
+      }
+    });
+
+    progressBar.addEventListener('click', (e)=>{
+      const rect = progressBar.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      if(audio.duration) audio.currentTime = pct * audio.duration;
+    });
+
+    volume.addEventListener('input', ()=>{ audio.volume = volume.value });
+    audio.volume = volume.value;
+
+    function formatTime(s){
+      if(!s || isNaN(s)) return '0:00';
+      const m = Math.floor(s/60); const sec = Math.floor(s%60).toString().padStart(2,'0');
+      return `${m}:${sec}`;
+    }
+
+    audio.addEventListener('ended', ()=>{
+      if(isRepeat) { audio.currentTime = 0; playAudio(); }
+      else nextBtn.click();
+    });
+
+    search.addEventListener('input', ()=>{
+      const q = search.value.trim().toLowerCase();
+      filteredTracks = tracks.filter(t=> t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+      currentIndex = 0;
+      renderPlaylist(filteredTracks);
+      if(filteredTracks.length) loadTrack(filteredTracks[0]);
+    });
+
+    shuffleBtn.addEventListener('click', ()=>{ isShuffle = !isShuffle; shuffleBtn.style.borderColor = isShuffle ? 'var(--glass)' : 'transparent' });
+    repeatBtn.addEventListener('click', ()=>{ isRepeat = !isRepeat; repeatBtn.style.borderColor = isRepeat ? 'var(--glass)' : 'transparent' });
+
+    themeBtn.addEventListener('click', ()=>{
+      if(document.documentElement.style.getPropertyValue('--bg') === ''){
+        // primary switch (simple toggle) - light theme
+        document.body.style.background = 'linear-gradient(180deg,#f7fafc,#e6eef6)';
+        document.body.style.color = '#0b1220';
+        themeBtn.textContent = 'Dark';
+      } else {
+        document.body.style.background = 'linear-gradient(180deg,#071023,#07182a)';
+        document.body.style.color = '#e6eef6';
+        themeBtn.textContent = 'Light';
+      }
+    });
+
+    // initial render
+    renderPlaylist(filteredTracks);
+    if(filteredTracks.length) loadTrack(filteredTracks[0]);
+
+    // Utility: allow keyboard space to play/pause
+    window.addEventListener('keydown', (e)=>{ if(e.code==='Space'){ e.preventDefault(); if(audio.paused) audio.play(); else audio.pause(); }});
+
+  </script>
+</body>
+</html>
